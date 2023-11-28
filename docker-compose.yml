@@ -1,0 +1,34 @@
+version: "3.8"
+services:
+  db:
+    container_name: db
+    image: postgres:16.1
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+#    healthcheck:
+#      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
+#      interval: 10s
+#      start_period: 30s
+#    command: ["mongod", "--bind_ip_all"]
+  auth:
+    platform: linux/amd64
+    container_name: auth
+    restart: always
+    build:
+      context: ../nest-auth
+      dockerfile: $PWD/base.Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ../nest-auth:/app
+      - /app/node_modules
+    depends_on:
+      - "db"
+    environment:
+      PORT: 3001
+      HOST: 0.0.0.0
+#      DB_URL: mongodb://mongo:27017/ats
+#      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+    command: ["nodemon", "src/main.ts"]
